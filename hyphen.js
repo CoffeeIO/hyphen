@@ -1,3 +1,10 @@
+/**
+ * Fork version 2.0.0 - MGApcDev (CoffeeIO)
+ * https://github.com/CoffeeIO/hyphen
+ *
+ * Update to hyphen single words with return as array.
+ */
+
 /** Franklin M. Liang's hyphenation algorithm, implemented in Javascript.
  *  Copyright (C) 2016 Yevhen Tiurin (yevhentiurin@gmail.com)
  *  https://github.com/ytiurin/hyphen
