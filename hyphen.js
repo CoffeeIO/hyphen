@@ -61,18 +61,29 @@
       levels.length - 2
     ] = 0;
 
-    var hyphenatedText = "",
-      leveledText = "",
-      debugHyphenatedText = "";
+    var leveledText = "";
+    var debugHyphenatedText = "";
+
+    // Return word parts in array rather than text.
+    var hyphenParts = [];
+    var currentPart = '';
 
     for (var i = 0; i < levels.length; i++) {
-      hyphenatedText +=
-        (levels[i] % 2 === 1 ? hyphenChar : "") + text.charAt(i);
-      debugHyphenatedText += (levels[i] % 2 === 1 ? "-" : "") + text.charAt(i);
-      leveledText += (levels[i] > 0 ? levels[i] : "") + text.charAt(i);
-    }
+      if (levels[i] % 2 === 1) {
+        hyphenParts.push(currentPart);
+        currentPart = '';
+      }
+      currentPart += text.charAt(i)
 
-    if (debug)
+      if (debug) {
+        debugHyphenatedText += (levels[i] % 2 === 1 ? "-" : "") + text.charAt(i);
+        leveledText += (levels[i] > 0 ? levels[i] : "") + text.charAt(i);
+      }
+    }
+    hyphenParts.push(currentPart);
+
+
+    if (debug) {
       console.log.apply(
         console,
         [text, "->"]
@@ -82,92 +93,10 @@
           .concat(["->", leveledText])
           .concat(["->", debugHyphenatedText])
       );
-
-    return hyphenatedText;
-  }
-
-  function iterateSourceText(text) {
-    var nextCharIndex = 0;
-
-    var states = { readWord: 1, returnWord: 2, returnChar: 3 };
-
-    return {
-      next: function() {
-        var nextChar,
-          nextWord = "";
-
-        while ((nextChar = text.charAt(nextCharIndex++))) {
-          var charIsSpaceOrSpecial = /\s|[\!-\@\[-\`\{-\xbf]/.test(nextChar);
-
-          var state = !charIsSpaceOrSpecial
-            ? states.readWord
-            : state === states.readWord
-              ? states.returnWord
-              : states.returnChar;
-
-          switch (state) {
-            case states.readWord:
-              nextWord += nextChar;
-              break;
-
-            case states.returnWord:
-              nextCharIndex--;
-              return nextWord;
-
-            case states.returnChar:
-              return nextChar;
-          }
-        }
-        if (nextWord !== "") {
-          return nextWord;
-        }
-      }
-    };
-  }
-
-  function start(text, patterns, cache, debug, hyphenChar) {
-    var newText = "",
-      nextWord,
-      readWord = iterateSourceText(text),
-      states = { hyphenateWord: 1, concatenate: 2 },
-      processedN = 0,
-      hyphenatedN = 0;
-
-    while ((nextWord = readWord.next())) {
-      var state =
-        nextWord.length > 4 ? states.hyphenateWord : states.concatenate;
-
-      switch (state) {
-        case states.hyphenateWord:
-          if (!cache[nextWord])
-            cache[nextWord] = hyphenateWord(
-              nextWord,
-              patterns,
-              debug,
-              hyphenChar
-            );
-
-          if (nextWord !== cache[nextWord]) hyphenatedN++;
-
-          nextWord = cache[nextWord];
-
-        case states.concatenate:
-          newText += nextWord;
-      }
-
-      processedN++;
+      console.log(hyphenParts);
     }
 
-    if (debug)
-      console.log(
-        "----------------\nHyphenation stats: " +
-          processedN +
-          " words processed, " +
-          hyphenatedN +
-          " words hyphenated"
-      );
-
-    return newText;
+    return hyphenParts;
   }
 
   // extract useful data from pattern
@@ -265,7 +194,7 @@
 
     // Hyphenator function
     return function(text) {
-      return start(text, patterns, cache, debug, hyphenChar);
+      return hyphenateWord(text, patterns, debug, hyphenChar);
     };
   };
 });
